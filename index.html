@@ -3,73 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebXR Hit Test Example</title>
-    <style>
-        body { margin: 0; }
-        canvas { display: block; }
-    </style>
+    <title>Basic HTML Test</title>
 </head>
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@webxr-tools/ar-button@0.1.0/build/ar-button.js"></script>
-
-    <script>
-        let camera, scene, renderer;
-        let hitTestSource = null;
-        let hitTestSourceRequested = false;
-
-        function init() {
-            // Set up the scene and camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            scene = new THREE.Scene();
-
-            // Set up the renderer with WebXR enabled
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            document.body.appendChild(renderer.domElement);
-
-            // Add the AR button to enter AR mode
-            document.body.appendChild(ARButton.createButton(renderer, {
-                requiredFeatures: ['hit-test']  // Enable hit test for surface detection
-            }));
-
-            // Add a basic light
-            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            light.position.set(0.5, 1, 0.25);
-            scene.add(light);
-
-            // Render loop to animate the scene
-            renderer.setAnimationLoop((timestamp, frame) => {
-                if (frame) {
-                    const session = renderer.xr.getSession();
-                    if (hitTestSourceRequested === false) {
-                        session.requestReferenceSpace('viewer').then((referenceSpace) => {
-                            session.requestHitTestSource({ space: referenceSpace }).then((source) => {
-                                hitTestSource = source;
-                            });
-                        });
-                        hitTestSourceRequested = true;
-                    }
-
-                    const viewerSpace = renderer.xr.getReferenceSpace();
-                    const hitTestResults = frame.getHitTestResults(hitTestSource);
-
-                    if (hitTestResults.length > 0) {
-                        const hit = hitTestResults[0];
-                        const pose = hit.getPose(viewerSpace);
-
-                        // Just for testing, log that we have found a surface
-                        console.log("Surface detected at position: ", pose.transform.position);
-                    }
-                }
-
-                renderer.render(scene, camera);
-            });
-        }
-
-        // Initialize the AR session when the window loads
-        window.onload = init;
-    </script>
+    <h1>Hello, World!</h1>
+    <p>If you can see this, your GitHub Pages setup is working!</p>
 </body>
 </html>
