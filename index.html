@@ -2,7 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <title>Hello WebXR!</title>
 
   <!-- three.js -->
@@ -11,15 +12,18 @@
 </head>
 <body>
 
+<!-- Starting an immersive WebXR session requires user interaction. -->
 <button onclick="activateXR()">Start Hello WebXR</button>
 <script>
 async function activateXR() {
+  // Add a canvas element and initialize a WebGL context that is compatible with WebXR.
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   const scene = new THREE.Scene();
-  
+
+  // Set up the WebGLRenderer, which handles rendering to the session's base layer.
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
@@ -28,16 +32,21 @@ async function activateXR() {
   });
   renderer.autoClear = false;
 
+  // The API directly updates the camera matrices.
+  // Disable matrix auto updates so three.js doesn't attempt to handle the matrices independently.
   const camera = new THREE.PerspectiveCamera();
   camera.matrixAutoUpdate = false;
 
+  // Initialize a WebXR session using "immersive-ar".
   const session = await navigator.xr.requestSession("immersive-ar", {requiredFeatures: ['hit-test']});
   session.updateRenderState({
     baseLayer: new XRWebGLLayer(session, gl)
   });
 
+  // Create a 'local' reference space.
   const referenceSpace = await session.requestReferenceSpace('local');
-  const hitTestSource = await session.requestHitTestSource({ space: referenceSpace });
+  const viewerSpace = await session.requestReferenceSpace('viewer');
+  const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   const loader = new THREE.GLTFLoader();
   let reticle;
@@ -49,11 +58,20 @@ async function activateXR() {
     scene.add(reticle);
   });
 
+  let smallModel;
+  // Load your small model
+  loader.load("https://TWToIMan.github.io/ar-skeleton-project/small-model.glb", function(gltf) {
+    smallModel = gltf.scene;
+    smallModel.visible = false; // Start hidden
+    scene.add(smallModel);
+  });
+
+  // Create a render loop that allows us to draw on the AR view.
   const onXRFrame = (time, frame) => {
     session.requestAnimationFrame(onXRFrame);
     gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
-    const pose = frame.getViewerPose(referenceSpace);
 
+    const pose = frame.getViewerPose(referenceSpace);
     if (pose) {
       const view = pose.views[0];
       const viewport = session.renderState.baseLayer.getViewport(view);
@@ -68,11 +86,17 @@ async function activateXR() {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
         reticle.visible = true; // Show reticle when a surface is found
+
+        // Position the small model at the reticle's position
+        smallModel.position.copy(reticle.position);
+        smallModel.visible = true; // Show the model when in AR
       } else {
         reticle.visible = false; // Hide reticle if no hit test
+        if (smallModel) smallModel.visible = false; // Hide the model if no hit test
       }
     }
 
+    // Render the scene with THREE.WebGLRenderer.
     renderer.render(scene, camera);
   };
 
