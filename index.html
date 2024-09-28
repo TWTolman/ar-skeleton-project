@@ -2,23 +2,24 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>Hello WebXR!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebXR AR with GLB Model</title>
 
-  <!-- three.js -->
+  <!-- Include three.js and GLTFLoader -->
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
   <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
-<!-- Starting an immersive WebXR session requires user interaction. -->
-<button onclick="activateXR()">Start Hello WebXR</button>
+<button onclick="activateXR()">Start AR</button>
 <script>
 async function activateXR() {
+  // Create a canvas and WebGL context
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
+  // Set up the Three.js scene
   const scene = new THREE.Scene();
   
   const renderer = new THREE.WebGLRenderer({
@@ -32,15 +33,18 @@ async function activateXR() {
   const camera = new THREE.PerspectiveCamera();
   camera.matrixAutoUpdate = false;
 
+  // Request an immersive-ar session with hit-test
   const session = await navigator.xr.requestSession("immersive-ar", {requiredFeatures: ['hit-test']});
   session.updateRenderState({
     baseLayer: new XRWebGLLayer(session, gl)
   });
 
+  // Set up reference spaces
   const referenceSpace = await session.requestReferenceSpace('local');
   const viewerSpace = await session.requestReferenceSpace('viewer');
   const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
+  // Load the reticle model
   const loader = new THREE.GLTFLoader();
   let reticle;
   loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", function(gltf) {
@@ -49,7 +53,23 @@ async function activateXR() {
     scene.add(reticle);
   });
 
-  const onXRFrame = (time, frame) => {
+  // Load your GLB model
+  let model;
+  loader.load('small-model.glb', function(gltf) {
+    model = gltf.scene;
+    // Adjust model scale if necessary
+    model.scale.set(0.1, 0.1, 0.1);
+    // Set model to be initially invisible
+    model.visible = false;
+    scene.add(model);
+  }, undefined, function(error) {
+    console.error('An error occurred during model loading:', error);
+  });
+
+  // Start the rendering loop
+  session.requestAnimationFrame(onXRFrame);
+
+  function onXRFrame(time, frame) {
     session.requestAnimationFrame(onXRFrame);
     gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
     const pose = frame.getViewerPose(referenceSpace);
@@ -63,20 +83,31 @@ async function activateXR() {
       camera.projectionMatrix.fromArray(view.projectionMatrix);
       camera.updateMatrixWorld(true);
 
+      // Perform hit test
       const hitTestResults = frame.getHitTestResults(hitTestSource);
-      if (hitTestResults.length > 0) {
+      if (hitTestResults.length > 0 && reticle) {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
-        reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-        reticle.visible = true; // Show the reticle when a surface is found
+
+        // Update reticle position and make it visible
+        reticle.visible = true;
+        reticle.matrix.fromArray(hitPose.transform.matrix);
+        reticle.updateMatrixWorld(true);
+
+        // Update model position and make it visible
+        if (model) {
+          model.visible = true;
+          model.matrix.fromArray(hitPose.transform.matrix);
+          model.updateMatrixWorld(true);
+        }
       } else {
-        reticle.visible = false; // Hide the reticle if no hit test
+        // Hide reticle and model if no surface detected
+        if (reticle) reticle.visible = false;
+        if (model) model.visible = false;
       }
     }
 
     renderer.render(scene, camera);
-  };
-
-  session.requestAnimationFrame(onXRFrame);
+  }
 }
 </script>
 </body>
