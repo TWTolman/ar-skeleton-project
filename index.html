@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebXR AR with Lighting and Shadows</title>
+  <title>WebXR AR with GLB Model and Lighting</title>
 
   <!-- Include three.js and GLTFLoader -->
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
@@ -17,91 +17,67 @@ async function activateXR() {
   // Create a canvas and WebGL context
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const gl = canvas.getContext("webgl", {xrCompatible: true});
+  const gl = canvas.getContext("webgl", { xrCompatible: true });
 
   // Set up the Three.js scene
   const scene = new THREE.Scene();
 
-  // **Add lights to the scene**
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
+  // Add basic ambient light
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1); // White light with full intensity
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  directionalLight.position.set(0, 10, 0); // Adjust position as needed
-  directionalLight.castShadow = true; // Enable shadow casting
-  scene.add(directionalLight);
-
-  // Configure shadow properties for the light
-  directionalLight.shadow.mapSize.width = 1024;
-  directionalLight.shadow.mapSize.height = 1024;
-  directionalLight.shadow.camera.near = 0.5;
-  directionalLight.shadow.camera.far = 50;
-  directionalLight.shadow.camera.left = -10;
-  directionalLight.shadow.camera.right = 10;
-  directionalLight.shadow.camera.top = 10;
-  directionalLight.shadow.camera.bottom = -10;
-
-  // Create a shadow-receiving plane
-  const shadowPlaneGeometry = new THREE.PlaneGeometry(10, 10);
-  const shadowPlaneMaterial = new THREE.ShadowMaterial({ opacity: 0.5 });
-  const shadowPlane = new THREE.Mesh(shadowPlaneGeometry, shadowPlaneMaterial);
-  shadowPlane.rotateX(-Math.PI / 2); // Align plane horizontally
-  shadowPlane.receiveShadow = true;
-  scene.add(shadowPlane);
-
+  // Initialize the renderer
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
     canvas: canvas,
-    context: gl
+    context: gl,
   });
   renderer.autoClear = false;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const camera = new THREE.PerspectiveCamera();
   camera.matrixAutoUpdate = false;
 
   // Request an immersive-ar session with hit-test
-  const session = await navigator.xr.requestSession("immersive-ar", { requiredFeatures: ['hit-test'] });
+  const session = await navigator.xr.requestSession("immersive-ar", {
+    requiredFeatures: ["hit-test"],
+  });
   session.updateRenderState({
-    baseLayer: new XRWebGLLayer(session, gl)
+    baseLayer: new XRWebGLLayer(session, gl),
   });
 
   // Set up reference spaces
-  const referenceSpace = await session.requestReferenceSpace('local');
-  const viewerSpace = await session.requestReferenceSpace('viewer');
+  const referenceSpace = await session.requestReferenceSpace("local");
+  const viewerSpace = await session.requestReferenceSpace("viewer");
   const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   // Load your GLB model
   const loader = new THREE.GLTFLoader();
-  let model = null;
-  loader.load('small-model.glb', function (gltf) {
-    model = gltf.scene;
-    // Adjust model scale if necessary
-    model.scale.set(0.1, 0.1, 0.1); // Adjust the scale as needed
-    model.visible = false; // Initially hidden
-
-    // Enable shadow casting for the model
-    model.traverse((node) => {
-      if (node.isMesh) {
-        node.castShadow = true;
-        node.receiveShadow = true; // If you want the model to receive shadows as well
-      }
-    });
-
-    scene.add(model);
-  }, undefined, function (error) {
-    console.error('An error occurred during model loading:', error);
-  });
+  let model;
+  loader.load(
+    "small-model.glb",
+    function (gltf) {
+      model = gltf.scene;
+      // Adjust model scale if necessary
+      model.scale.set(0.1, 0.1, 0.1); // Adjust the scale as needed
+      model.visible = false; // Initially hidden
+      scene.add(model);
+    },
+    undefined,
+    function (error) {
+      console.error("An error occurred during model loading:", error);
+    }
+  );
 
   // Start the rendering loop
   session.requestAnimationFrame(onXRFrame);
 
   function onXRFrame(time, frame) {
     session.requestAnimationFrame(onXRFrame);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
-
+    gl.bindFramebuffer(
+      gl.FRAMEBUFFER,
+      session.renderState.baseLayer.framebuffer
+    );
     const pose = frame.getViewerPose(referenceSpace);
 
     if (pose) {
@@ -113,13 +89,15 @@ async function activateXR() {
       camera.projectionMatrix.fromArray(view.projectionMatrix);
       camera.updateMatrixWorld(true);
 
-      // Perform hit test to place the model and shadow plane
+      // Perform hit test
       const hitTestResults = frame.getHitTestResults(hitTestSource);
       if (hitTestResults.length > 0 && model) {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
 
         // Update model position and make it visible
         model.visible = true;
+
+        // Update model's position and orientation
         model.position.set(
           hitPose.transform.position.x,
           hitPose.transform.position.y,
@@ -131,15 +109,8 @@ async function activateXR() {
           hitPose.transform.orientation.z,
           hitPose.transform.orientation.w
         );
-
-        // Update shadow plane position
-        shadowPlane.position.set(
-          hitPose.transform.position.x,
-          hitPose.transform.position.y,
-          hitPose.transform.position.z
-        );
       } else {
-        // Hide the model if no surface is detected
+        // Hide model if no surface detected
         if (model) model.visible = false;
       }
     }
