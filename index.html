@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<!-- Button to start AR -->
+<!-- Starting an immersive WebXR session requires user interaction. -->
 <button onclick="activateXR()">Start Hello WebXR</button>
 <script>
 async function activateXR() {
@@ -20,6 +20,7 @@ async function activateXR() {
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   const scene = new THREE.Scene();
+  
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
@@ -50,7 +51,7 @@ async function activateXR() {
     scene.add(reticle);
   });
 
-  // Load the small model from your GitHub URL
+  // Load your small GLB model from the GitHub Pages URL
   loader.load("https://twtolman.github.io/ar-skeleton-project/small-model.glb", function(gltf) {
     smallModel = gltf.scene;
     smallModel.visible = false; // Initialize as hidden
@@ -74,16 +75,15 @@ async function activateXR() {
       const hitTestResults = frame.getHitTestResults(hitTestSource);
       if (hitTestResults.length > 0) {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
-
-        // Position the reticle and model at the hit test position
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-        reticle.visible = true; // Show reticle
+        reticle.visible = true; // Show the reticle when a surface is found
 
-        smallModel.position.copy(reticle.position); // Position model at reticle
-        smallModel.visible = true; // Show model
+        // Position the small model at the reticle's position
+        smallModel.position.copy(reticle.position);
+        smallModel.visible = true; // Make the model visible
       } else {
-        reticle.visible = false; // Hide reticle if no hit test
-        smallModel.visible = false; // Hide model if no hit test
+        reticle.visible = false; // Hide the reticle if no hit test
+        smallModel.visible = false; // Hide the model if no hit test
       }
     }
 
