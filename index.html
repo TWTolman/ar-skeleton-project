@@ -3,47 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Camera Test</title>
-    <style> body { margin: 0; } </style>
+    <title>AR Test Confirmation</title>
 </head>
 <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@webxr-tools/ar-button@0.1.0/build/ar-button.js"></script>
-
-    <script>
-        let camera, scene, renderer;
-
-        function init() {
-            console.log("Initializing AR...");
-
-            // Set up the scene and camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            scene = new THREE.Scene();
-
-            // Set up the renderer with WebXR enabled
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;  // Enable WebXR for AR
-            document.body.appendChild(renderer.domElement);
-            console.log("Renderer set up and WebXR enabled.");
-
-            // Create AR button
-            try {
-                const arButton = ARButton.createButton(renderer);
-                document.body.appendChild(arButton);
-                console.log("AR button created successfully.");
-            } catch (error) {
-                console.error("Error creating AR button:", error);
-            }
-
-            // Render loop
-            renderer.setAnimationLoop(() => {
-                renderer.render(scene, camera);
-            });
-        }
-
-        // Initialize everything when the window loads
-        window.onload = init;
-    </script>
+    <h1>Test Message: This is working!</h1>
+    <p>If you see this, your page is loading correctly.</p>
 </body>
 </html>
