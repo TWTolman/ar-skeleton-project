@@ -38,24 +38,15 @@ async function activateXR() {
   });
 
   const referenceSpace = await session.requestReferenceSpace('local');
-  const hitTestSource = await session.requestHitTestSource({ space: referenceSpace });
+  const viewerSpace = await session.requestReferenceSpace('viewer');
+  const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   const loader = new THREE.GLTFLoader();
   let reticle;
-  let smallModel;
-
-  // Load the reticle
   loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", function(gltf) {
     reticle = gltf.scene;
     reticle.visible = false; // Initialize as hidden
     scene.add(reticle);
-  });
-
-  // Load your small GLB model from the GitHub Pages URL
-  loader.load("https://twtolman.github.io/ar-skeleton-project/small-model.glb", function(gltf) {
-    smallModel = gltf.scene;
-    smallModel.visible = false; // Initialize as hidden
-    scene.add(smallModel);
   });
 
   const onXRFrame = (time, frame) => {
@@ -77,13 +68,8 @@ async function activateXR() {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
         reticle.visible = true; // Show the reticle when a surface is found
-
-        // Position the small model at the reticle's position
-        smallModel.position.copy(reticle.position);
-        smallModel.visible = true; // Make the model visible
       } else {
         reticle.visible = false; // Hide the reticle if no hit test
-        smallModel.visible = false; // Hide the model if no hit test
       }
     }
 
