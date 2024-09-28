@@ -58,9 +58,8 @@ async function activateXR() {
   loader.load('small-model.glb', function(gltf) {
     model = gltf.scene;
     // Adjust model scale if necessary
-    model.scale.set(0.1, 0.1, 0.1);
-    // Set model to be initially invisible
-    model.visible = false;
+    model.scale.set(0.1, 0.1, 0.1); // Adjust the scale as needed
+    model.visible = false; // Initially hidden
     scene.add(model);
   }, undefined, function(error) {
     console.error('An error occurred during model loading:', error);
@@ -96,8 +95,19 @@ async function activateXR() {
         // Update model position and make it visible
         if (model) {
           model.visible = true;
-          model.matrix.fromArray(hitPose.transform.matrix);
-          model.updateMatrixWorld(true);
+
+          // Update model's position and orientation
+          model.position.set(
+            hitPose.transform.position.x,
+            hitPose.transform.position.y,
+            hitPose.transform.position.z
+          );
+          model.quaternion.set(
+            hitPose.transform.orientation.x,
+            hitPose.transform.orientation.y,
+            hitPose.transform.orientation.z,
+            hitPose.transform.orientation.w
+          );
         }
       } else {
         // Hide reticle and model if no surface detected
