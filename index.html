@@ -11,18 +11,16 @@
 </head>
 <body>
 
-<!-- Button to start the AR session -->
+<!-- Starting an immersive WebXR session requires user interaction. -->
 <button onclick="activateXR()">Start Hello WebXR</button>
 <script>
 async function activateXR() {
-  // Add a canvas element and initialize a WebGL context compatible with WebXR.
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   const scene = new THREE.Scene();
-
-  // Set up the WebGLRenderer for the session's base layer.
+  
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
@@ -31,36 +29,31 @@ async function activateXR() {
   });
   renderer.autoClear = false;
 
-  // Set up the camera.
   const camera = new THREE.PerspectiveCamera();
   camera.matrixAutoUpdate = false;
 
-  // Initialize a WebXR session using "immersive-ar".
   const session = await navigator.xr.requestSession("immersive-ar", {requiredFeatures: ['hit-test']});
   session.updateRenderState({
     baseLayer: new XRWebGLLayer(session, gl)
   });
 
-  // Create reference spaces for AR.
   const referenceSpace = await session.requestReferenceSpace('local');
-  const hitTestSource = await session.requestHitTestSource({ space: referenceSpace });
+  const viewerSpace = await session.requestReferenceSpace('viewer');
+  const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   const loader = new THREE.GLTFLoader();
   let reticle;
-
-  // Load the reticle
   loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", function(gltf) {
     reticle = gltf.scene;
-    reticle.visible = false; // Start hidden
+    reticle.visible = false; // Initialize as hidden
     scene.add(reticle);
   });
 
-  // Create the render loop for the AR view.
   const onXRFrame = (time, frame) => {
     session.requestAnimationFrame(onXRFrame);
     gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
-
     const pose = frame.getViewerPose(referenceSpace);
+
     if (pose) {
       const view = pose.views[0];
       const viewport = session.renderState.baseLayer.getViewport(view);
@@ -76,11 +69,10 @@ async function activateXR() {
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
         reticle.visible = true; // Show the reticle when a surface is found
       } else {
-        reticle.visible = false; // Hide reticle if no hit test
+        reticle.visible = false; // Hide the reticle if no hit test
       }
     }
 
-    // Render the scene with THREE.WebGLRenderer.
     renderer.render(scene, camera);
   };
 
