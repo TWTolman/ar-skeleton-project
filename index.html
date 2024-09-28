@@ -29,4 +29,21 @@
 
             // Create AR button
             try {
-               
+                const arButton = ARButton.createButton(renderer);
+                document.body.appendChild(arButton);
+                console.log("AR button created successfully.");
+            } catch (error) {
+                console.error("Error creating AR button:", error);
+            }
+
+            // Render loop
+            renderer.setAnimationLoop(() => {
+                renderer.render(scene, camera);
+            });
+        }
+
+        // Initialize everything when the window loads
+        window.onload = init;
+    </script>
+</body>
+</html>
