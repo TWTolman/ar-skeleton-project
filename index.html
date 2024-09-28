@@ -20,10 +20,7 @@ async function activateXR() {
   const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   const scene = new THREE.Scene();
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
-  directionalLight.position.set(10, 15, 10);
-  scene.add(directionalLight);
-
+  
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
@@ -31,7 +28,7 @@ async function activateXR() {
     context: gl
   });
   renderer.autoClear = false;
-  
+
   const camera = new THREE.PerspectiveCamera();
   camera.matrixAutoUpdate = false;
 
@@ -48,7 +45,7 @@ async function activateXR() {
   let reticle;
   loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", function(gltf) {
     reticle = gltf.scene;
-    reticle.visible = true; // Always show the reticle
+    reticle.visible = false; // Initialize as hidden
     scene.add(reticle);
   });
 
@@ -56,7 +53,7 @@ async function activateXR() {
     session.requestAnimationFrame(onXRFrame);
     gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
     const pose = frame.getViewerPose(referenceSpace);
-    
+
     if (pose) {
       const view = pose.views[0];
       const viewport = session.renderState.baseLayer.getViewport(view);
@@ -70,7 +67,7 @@ async function activateXR() {
       if (hitTestResults.length > 0) {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-        reticle.visible = true; // Show the reticle
+        reticle.visible = true; // Show the reticle when a surface is found
       } else {
         reticle.visible = false; // Hide the reticle if no hit test
       }
