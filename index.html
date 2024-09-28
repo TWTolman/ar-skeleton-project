@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebXR AR with GLB Model and Lighting</title>
+  <title>WebXR AR with GLB Model</title>
 
   <!-- Include three.js and GLTFLoader -->
   <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
@@ -17,21 +17,16 @@ async function activateXR() {
   // Create a canvas and WebGL context
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  const gl = canvas.getContext("webgl", { xrCompatible: true });
+  const gl = canvas.getContext("webgl", {xrCompatible: true});
 
   // Set up the Three.js scene
   const scene = new THREE.Scene();
-
-  // Add basic ambient light
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1); // White light with full intensity
-  scene.add(ambientLight);
-
-  // Initialize the renderer
+  
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     preserveDrawingBuffer: true,
     canvas: canvas,
-    context: gl,
+    context: gl
   });
   renderer.autoClear = false;
 
@@ -39,52 +34,42 @@ async function activateXR() {
   camera.matrixAutoUpdate = false;
 
   // Request an immersive-ar session with hit-test
-  const session = await navigator.xr.requestSession("immersive-ar", {
-    requiredFeatures: ["hit-test"],
-  });
+  const session = await navigator.xr.requestSession("immersive-ar", {requiredFeatures: ['hit-test']});
   session.updateRenderState({
-    baseLayer: new XRWebGLLayer(session, gl),
+    baseLayer: new XRWebGLLayer(session, gl)
   });
 
   // Set up reference spaces
-  const referenceSpace = await session.requestReferenceSpace("local");
-  const viewerSpace = await session.requestReferenceSpace("viewer");
+  const referenceSpace = await session.requestReferenceSpace('local');
+  const viewerSpace = await session.requestReferenceSpace('viewer');
   const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   // Load your GLB model
   const loader = new THREE.GLTFLoader();
   let model;
-  loader.load(
-    "small-model.glb",
-    function (gltf) {
-      model = gltf.scene;
-      // Adjust model scale if necessary
-      model.scale.set(0.1, 0.1, 0.1); // Adjust the scale as needed
-      model.visible = false; // Initially hidden
-      scene.add(model);
-    },
-    undefined,
-    function (error) {
-      console.error("An error occurred during model loading:", error);
-    }
-  );
+  loader.load('small-model.glb', function(gltf) {
+    model = gltf.scene;
+    // Adjust model scale if necessary
+    model.scale.set(0.1, 0.1, 0.1); // Adjust the scale as needed
+    model.visible = false; // Initially hidden
+    scene.add(model);
+  }, undefined, function(error) {
+    console.error('An error occurred during model loading:', error);
+  });
 
   // Start the rendering loop
   session.requestAnimationFrame(onXRFrame);
 
   function onXRFrame(time, frame) {
     session.requestAnimationFrame(onXRFrame);
-    gl.bindFramebuffer(
-      gl.FRAMEBUFFER,
-      session.renderState.baseLayer.framebuffer
-    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
     const pose = frame.getViewerPose(referenceSpace);
 
     if (pose) {
       const view = pose.views[0];
       const viewport = session.renderState.baseLayer.getViewport(view);
       renderer.setSize(viewport.width, viewport.height);
-
+      
       camera.matrix.fromArray(view.transform.matrix);
       camera.projectionMatrix.fromArray(view.projectionMatrix);
       camera.updateMatrixWorld(true);
