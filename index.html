@@ -54,7 +54,7 @@ async function activateXR() {
 
   // Load your skeleton model from the root folder
   let skeleton;
-  loader.load("https://yourusername.github.io/ar-skeleton-project/skeleton-dance.glb", function(gltf) {
+  loader.load("https://TWToIMan.github.io/ar-skeleton-project/skeleton-dance.glb", function(gltf) {
     skeleton = gltf.scene;
   });
 
@@ -73,11 +73,11 @@ async function activateXR() {
       camera.updateMatrixWorld(true);
 
       const hitTestResults = frame.getHitTestResults(hitTestSource);
-      if (hitTestResults.length > 0 && reticle) {
+      if (hitTestResults.length > 0 && skeleton) {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
-        reticle.visible = true;
-        reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
-        reticle.updateMatrixWorld(true);
+        skeleton.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
+        skeleton.visible = true; // Make the skeleton visible when placed
+        scene.add(skeleton); // Add the skeleton to the scene
       }
 
       renderer.render(scene, camera);
