@@ -21,6 +21,14 @@ async function activateXR() {
 
   // Set up the Three.js scene
   const scene = new THREE.Scene();
+
+  // **Add lights to the scene**
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Soft white light
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(0, 5, 5); // Adjust position as needed
+  scene.add(directionalLight);
   
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
@@ -51,11 +59,29 @@ async function activateXR() {
     model = gltf.scene;
     // Adjust model scale if necessary
     model.scale.set(0.1, 0.1, 0.1); // Adjust the scale as needed
+
+    // **Enable casting and receiving shadows if needed**
+    model.traverse((node) => {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+      }
+    });
+
     model.visible = false; // Initially hidden
     scene.add(model);
   }, undefined, function(error) {
     console.error('An error occurred during model loading:', error);
   });
+
+  // **Enable shadows in the renderer if needed**
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // **Configure the directional light to cast shadows**
+  directionalLight.castShadow = true;
+  directionalLight.shadow.mapSize.width = 1024;
+  directionalLight.shadow.mapSize.height = 1024;
 
   // Start the rendering loop
   session.requestAnimationFrame(onXRFrame);
@@ -73,6 +99,10 @@ async function activateXR() {
       camera.matrix.fromArray(view.transform.matrix);
       camera.projectionMatrix.fromArray(view.projectionMatrix);
       camera.updateMatrixWorld(true);
+
+      // **Update directional light position if desired**
+      // Optional: Make the light follow the camera or model
+      // directionalLight.position.copy(camera.position);
 
       // Perform hit test
       const hitTestResults = frame.getHitTestResults(hitTestSource);
