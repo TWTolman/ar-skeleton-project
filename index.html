@@ -1,48 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Test: Camera Should Start!</title>
-    <style> body { margin: 0; } </style>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Hello WebXR!</title>
+
+  <!-- three.js -->
+  <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
 </head>
 <body>
-    <h1>AR Test: Camera Should Start!</h1>
-    <p>If you see the AR button, tap it to start the camera.</p>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@webxr-tools/ar-button@0.1.0/build/ar-button.js"></script>
+<!-- Starting an immersive WebXR session requires user interaction.
+    We start this one with a simple button. -->
+<button onclick="activateXR()">Start Hello WebXR</button>
+<script>
+async function activateXR() {
+  // Add a canvas element and initialize a WebGL context that is compatible with WebXR.
+  const canvas = document.createElement("canvas");
+  document.body.appendChild(canvas);
+  const gl = canvas.getContext("webgl", {xrCompatible: true});
 
-    <script>
-        let camera, scene, renderer;
-
-        function init() {
-            console.log("Initializing AR...");
-
-            // Create the camera and scene
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            scene = new THREE.Scene();
-
-            // Set up the renderer with WebXR enabled
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;  // Enable WebXR for AR
-            document.body.appendChild(renderer.domElement);
-            console.log("Renderer set up and WebXR enabled.");
-
-            // Create the AR button
-            const arButton = ARButton.createButton(renderer);
-            document.body.appendChild(arButton);
-            console.log("AR button created successfully.");
-
-            // Render loop
-            renderer.setAnimationLoop(() => {
-                renderer.render(scene, camera);
-            });
-        }
-
-        // Initialize everything when the window loads
-        window.onload = init;
-    </script>
+  // To be continued in upcoming steps.
+}
+</script>
 </body>
 </html>
