@@ -52,12 +52,13 @@ async function activateXR() {
     scene.add(reticle);
   });
 
-  // Create a simple cube to test AR functionality
-  const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-  const material = new THREE.MeshBasicMaterial({color: 0x00ff00}); // Green color
-  const cube = new THREE.Mesh(geometry, material);
-  cube.visible = false; // Hide initially
-  scene.add(cube);
+  // Load your small model
+  let smallModel;
+  loader.load("https://TWToIMan.github.io/ar-skeleton-project/small-model.glb", function(gltf) {
+    smallModel = gltf.scene; // Store the loaded model
+    smallModel.visible = false; // Hide initially
+    scene.add(smallModel);
+  });
 
   const onXRFrame = (time, frame) => {
     session.requestAnimationFrame(onXRFrame);
@@ -80,8 +81,8 @@ async function activateXR() {
         
         // Make the reticle visible
         reticle.visible = true; 
-        cube.position.copy(reticle.position); // Move cube to the reticle position
-        cube.visible = true; // Show the cube when in AR
+        smallModel.position.copy(reticle.position); // Move model to the reticle position
+        smallModel.visible = true; // Show the model when in AR
       }
     }
 
@@ -90,10 +91,10 @@ async function activateXR() {
 
   session.requestAnimationFrame(onXRFrame);
 
-  // Add interaction to place the cube
+  // Add interaction to place the small model
   session.addEventListener("select", () => {
-    if (cube) {
-      const clone = cube.clone(); // Clone the cube for placement
+    if (smallModel) {
+      const clone = smallModel.clone(); // Clone the small model for placement
       scene.add(clone);
     }
   });
