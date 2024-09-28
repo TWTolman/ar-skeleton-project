@@ -76,6 +76,7 @@ async function activateXR() {
 
       const hitTestResults = frame.getHitTestResults(hitTestSource);
       if (hitTestResults.length > 0) {
+        // Use the first hit test result to position the reticle and model
         const hitPose = hitTestResults[0].getPose(referenceSpace);
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
         
