@@ -79,10 +79,12 @@ async function activateXR() {
         const hitPose = hitTestResults[0].getPose(referenceSpace);
         reticle.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
         
-        // Make the reticle visible
+        // Make the reticle visible and position the model
         reticle.visible = true; 
         smallModel.position.copy(reticle.position); // Move model to the reticle position
         smallModel.visible = true; // Show the model when in AR
+      } else {
+        reticle.visible = false; // Hide reticle if no hit test
       }
     }
 
