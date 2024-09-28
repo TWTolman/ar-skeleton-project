@@ -3,10 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic HTML Test</title>
+    <title>AR Camera Test</title>
+    <style> body { margin: 0; } </style>
 </head>
 <body>
-    <h1>Hello, World!</h1>
-    <p>If you can see this, your GitHub Pages setup is working!</p>
-</body>
-</html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@webxr-tools/ar-button@0.1.0/build/ar-button.js"></script>
+
+    <script>
+        let camera, scene, renderer;
+
+        function init() {
+            console.log("Initializing AR...");
+
+            // Set up the scene and camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            scene = new THREE.Scene();
+
+            // Set up the renderer with WebXR enabled
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;  // Enable WebXR for AR
+            document.body.appendChild(renderer.domElement);
+            console.log("Renderer set up and WebXR enabled.");
+
+            // Create AR button
+            try {
+               
